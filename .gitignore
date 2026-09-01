@@ -2,19 +2,15 @@ node_modules/
 .bun-tmp/
 package-lock.json
 .mongodb/
-coverage/
 dist/
 build/
 .venv/
 __pycache__/
 *.py[cod]
-.pytest_cache/
 .env
 .env.local
-.seed-signature
 *.log
 .DS_Store
-output/*.xml
 
 CLAUDE.md
 .claude/

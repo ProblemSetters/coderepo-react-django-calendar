@@ -15,25 +15,10 @@ ALLOWED_HOSTS = ["*"]
 JWT_SECRET = os.getenv("JWT_SECRET", "calendar-secret-jwt-key-2026")
 JWT_EXPIRES_IN = os.getenv("JWT_EXPIRES_IN", "24h")
 JWT_ISSUER = "calendar-api"
-JWT_AUDIENCE = "calendar-assessment"
+JWT_AUDIENCE = "calendar-app"
 
 MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/calendar_db")
-IS_TEST_RUN = os.getenv("CALENDAR_TEST_DB") == "1"
-
-
-def build_mongodb_uri(uri, is_test):
-    if not is_test:
-        return uri
-
-    marker = uri.find("?")
-
-    if marker == -1:
-        return f"{uri}_test"
-
-    return f"{uri[:marker]}_test{uri[marker:]}"
-
-
-mongoengine.connect(host=build_mongodb_uri(MONGODB_URI, IS_TEST_RUN), uuidRepresentation="standard")
+mongoengine.connect(host=MONGODB_URI, uuidRepresentation="standard")
 
 INSTALLED_APPS = [
     "corsheaders",

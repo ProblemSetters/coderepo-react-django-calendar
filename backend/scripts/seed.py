@@ -606,7 +606,7 @@ def seed():
     print(f"  Accounts:  {WorkspaceAccount.objects.count()}")
     print(f"  Calendars: {Calendar.objects.count()}")
     print(f"  Events:    {Event.objects.count()}")
-    print("\nTest Users:")
+    print("\nDemo accounts:")
 
     for profile in profiles:
         print(f"  Email: {profile.email} | Password: {DEMO_PASSWORD}")

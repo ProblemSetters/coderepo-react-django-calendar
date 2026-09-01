@@ -2,8 +2,6 @@ version: 1.0
 configuration:
   has_webserver: true
   readonly_paths:
-    - backend/tests/**
-    - backend/pytest.ini
     - backend/scripts/**
     - backend/calendar_backend/settings.py
     - frontend/vite.config.js
@@ -13,5 +11,4 @@ configuration:
       - frontend/src/App.jsx
     project_menu:
       run: bun start
-      install: bun install
-      test: echo "No test command configured"
+      install: bun install && bash setup.sh --seed

@@ -2,7 +2,6 @@
 set -e
 
 MODE="${1:-}"
-SEED_SIGNATURE_FILE=".seed-signature"
 
 log_info() { echo -e "\033[0;32m[INFO]\033[0m $1"; }
 log_warn() { echo -e "\033[1;33m[WARN]\033[0m $1"; }
@@ -31,7 +30,12 @@ check_mongo() {
         return
     fi
     log_warn "MongoDB is not reachable; starting it"
-    mongod --config /etc/mongod.conf --fork >/dev/null 2>&1 || true
+    if [ -f /etc/mongod.conf ]; then
+        mongod --config /etc/mongod.conf --fork >/dev/null 2>&1 || true
+    else
+        mkdir -p .mongodb
+        mongod --dbpath .mongodb --bind_ip "$MONGO_HOST" --port "$MONGO_PORT" --fork --logpath .mongodb/mongod.log >/dev/null 2>&1 || true
+    fi
     mongo_is_reachable || {
         log_error "MongoDB is required on ${MONGO_HOST}:${MONGO_PORT}. Start it, then run this again."
         exit 1
@@ -43,28 +47,13 @@ setup_python() {
         log_info "Creating .venv with Python 3.12"
         uv venv --python 3.12 .venv
     fi
-    uv pip install --python .venv/bin/python -r backend/requirements.txt --quiet
+    uv --system-certs pip install --python .venv/bin/python -r backend/requirements.txt --quiet
     log_info "Python dependencies ready"
 }
 
-seed_signature() {
-    if command -v md5sum >/dev/null 2>&1; then
-        md5sum backend/scripts/seed_data.py | cut -d' ' -f1
-    else
-        md5 -q backend/scripts/seed_data.py
-    fi
-}
-
-seed_if_needed() {
-    current_signature="$(seed_signature)"
-    stored_signature="$(test -f "$SEED_SIGNATURE_FILE" && sed -n '1p' "$SEED_SIGNATURE_FILE" || true)"
-    if [ "$current_signature" = "$stored_signature" ]; then
-        log_info "Seed data is current"
-        return
-    fi
+seed_database() {
     log_info "Seeding Calendar database"
     bun run seed
-    seed_signature > "$SEED_SIGNATURE_FILE"
 }
 
 setup_env
@@ -72,9 +61,7 @@ check_mongo
 setup_python
 
 case "$MODE" in
-    --start) ;;
-    --seed) bun run seed; seed_signature > "$SEED_SIGNATURE_FILE" ;;
-    --ensure-seeded|"") seed_if_needed ;;
+    --start|--seed|"") seed_database ;;
     *) log_error "Unknown setup mode: $MODE"; exit 1 ;;
 esac
 
