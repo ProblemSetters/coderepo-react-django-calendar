@@ -8,17 +8,17 @@ Use this document as the product acceptance contract while creating an applicati
 
 ## Core principles
 
-1. **Deliver a product, not disconnected code.** Every documented capability must have a usable frontend surface, a backend API flow, and MongoDB persistence where data is involved.
+1. **Deliver a product, not disconnected code.** Every documented or reachable product capability must have a usable frontend surface, a backend API flow, and MongoDB persistence where data is involved.
 2. **Preserve the declared stack.** The repository's existing manifests, lockfiles, build files, and working application define the approved technology.
 3. **Do not expand dependencies.** Use the approved dependencies already present and native platform APIs.
 4. **Make setup deterministic.** The declared install and run commands must work from a clean checkout and produce a known seeded state.
-5. **Document what is actually delivered.** The root README is the product overview, feature inventory, and operator walkthrough.
+5. **Document what is actually delivered.** The root README is a concise product identity, stack summary, and operator walkthrough.
 
 ## 1. Product completeness
 
 ### 1.1 End-to-end capability
 
-Each capability listed in the README must span the application:
+Each capability listed in the README or reachable in the product must span the application:
 
 - The frontend exposes a meaningful page, component, control, or interaction.
 - The frontend calls the real backend API for that capability.
@@ -31,11 +31,9 @@ A frontend-only demonstration, an unused backend route, or a hardcoded replaceme
 
 ### 1.2 Product feature inventory
 
-The README is the source of truth for feature acceptance. Write features as specific user outcomes rather than broad labels.
+The README may remain concise and does not need a standalone feature inventory. Validation discovers the complete product surface from reachable frontend interactions, frontend API clients, and public backend product routes.
 
-Good feature wording explains what a user can accomplish, such as creating a recurring event with guests and receiving conflict feedback. Wording such as “calendar support” is too vague to validate.
-
-Do not advertise a capability that is not implemented end to end. Do not omit a major reachable product capability from the README.
+Every frontend capability must map forward to backend behavior, and every product backend route must map back to a reachable frontend consumer. Strictly operational routes such as health reporting are exempt from the frontend-consumer requirement. Do not advertise a capability that is not implemented end to end.
 
 ### 1.3 Real application data
 
@@ -225,19 +223,17 @@ Every application must have a root `README.md`. It is part of the product delive
 
 The README must contain:
 
-1. **Product overview:** what the application is, who it serves, and the problem it solves.
-2. **Feature inventory:** concrete user outcomes covering every major product area.
-3. **End-to-end scope:** enough detail to understand how each feature spans frontend, API, and persistence.
-4. **Technology stack:** actual frontend, backend, database, runtime, package manager, build tool, validation, and authentication choices.
-5. **Project structure:** an annotated tree showing the major frontend, backend, configuration, documentation, and operation paths.
-6. **Prerequisites:** required local runtimes and infrastructure.
-7. **MongoDB behavior:** connection expectation, seeding, and reset behavior.
-8. **Run instructions:** the minimal install and full-start workflow.
-9. **Command reference:** every additional documented command and its purpose.
-10. **Seeded access:** copyable login credentials and any profile-selection explanation.
-11. **Guideline and skill workflow:** how an application author uses the guideline while creating a product and invokes validation after completion.
+1. **Product identity:** one clear description of the application and its purpose.
+2. **Technology stack:** actual frontend, backend, database, runtime, package manager, build tool, validation, and authentication choices.
+3. **Project structure:** an annotated tree showing the major frontend, backend, configuration, documentation, and operation paths.
+4. **Prerequisites:** required local runtimes and infrastructure.
+5. **MongoDB behavior:** connection expectation, seeding, and reset behavior.
+6. **Run instructions:** the minimal install and full-start workflow.
+7. **Command reference:** every additional documented command and its purpose.
+8. **Seeded access:** copyable login credentials and any profile-selection explanation.
+9. **Guideline and skill workflow:** how an application author uses the guideline while creating a product and invokes validation after completion.
 
-The README fails validation when it is missing, placeholder content, materially incomplete, inconsistent with the repository, too vague to build a feature matrix, or claims behavior that cannot be mapped to both frontend and backend implementation.
+The README fails validation when it is missing, placeholder content, materially incomplete, inconsistent with the repository, or claims behavior that cannot be mapped to both frontend and backend implementation.
 
 ## 7. Acceptance standard
 
@@ -249,7 +245,8 @@ A repository is ready only when direct evidence supports every applicable item.
 - The README passes the required-content gate.
 - The detected stack matches its documentation and commands.
 - Dependency changes do not expand the approved surface.
-- Frontend components, API clients, backend routes, services, and repositories map to every documented feature.
+- Every reachable frontend capability maps through an API client to backend behavior and persistence where applicable.
+- Every public backend product route maps back to a reachable frontend consumer unless it is strictly operational.
 - Configuration, debugger paths, and archive rules are valid.
 
 ### 7.2 Install, build, and start acceptance
@@ -263,7 +260,7 @@ A repository is ready only when direct evidence supports every applicable item.
 
 ### 7.3 Feature and persistence acceptance
 
-For every README feature:
+For every product capability discovered from the reachable frontend, frontend API clients, or public backend routes:
 
 - identify the frontend surface;
 - identify the frontend API call;

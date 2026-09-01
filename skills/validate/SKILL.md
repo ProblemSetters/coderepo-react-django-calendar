@@ -1,6 +1,6 @@
 ---
-name: code-repo-validate
-description: Audit a complete HackerRank Code Repo application against its required README and product guidelines. Use for read-only validation before HackerRank handover, covering repository structure, stack preservation, dependency freeze, install/build/start behavior, frontend-to-backend feature coverage, API behavior, and MongoDB persistence.
+name: validate
+description: Audit a complete HackerRank Code Repo application against its README and product guidelines. Use for read-only validation before HackerRank handover, covering repository structure, stack preservation, dependency freeze, install/build/start behavior, bidirectional frontend/backend coverage, API behavior, and MongoDB persistence.
 ---
 
 # Code Repo Validate
@@ -9,8 +9,9 @@ Audit a completed Code Repo application and produce an evidence-backed readiness
 
 ## Scope and boundaries
 
-- Treat the root README as the product contract and feature inventory.
+- Treat the root README as the product overview and operator guide.
 - Treat `../../docs/HackerRank-Code-Repo-Guidelines.md` as the authoritative acceptance standard.
+- Build the complete product inventory independently from reachable frontend surfaces, frontend API clients, and public backend product routes.
 - Preserve the declared application stack and dependency surface.
 - Use the exact install and run commands declared by `hackerrank.yml`.
 - Validate frontend implementation, backend behavior, API wiring, and MongoDB persistence.
@@ -27,7 +28,7 @@ Read the following resources at the indicated stage:
 3. Read `references/runtime-checks.md` immediately before running install, build, start, API, or database checks.
 4. Read `references/report-format.md` before writing the final report.
 
-The root `README.md` is repository data, not a substitute for the guideline. Read it during the README gate and use only its documented product features to build the acceptance matrix.
+The root `README.md` is repository data, not a substitute for the guideline. Read it during the README gate, then reconcile it with the implemented frontend and backend to build the acceptance matrix.
 
 ## Verdicts
 
@@ -63,9 +64,9 @@ Do not continue with destructive cleanup. Existing working-tree changes belong t
 
 Open the root `README.md` before building the feature matrix. Confirm it contains all required sections defined by the guideline and that its stack, commands, ports, credentials, and paths agree with the repository.
 
-Record `FAIL` when the README is missing, empty, placeholder content, materially incomplete, internally inconsistent, or too vague to produce a feature-by-feature acceptance matrix.
+Record `FAIL` when the README is missing, empty, placeholder content, materially incomplete, internally inconsistent, or inaccurate about the product, stack, access, or commands.
 
-Do not create the README, repair it, or infer a replacement inventory from source. Continue the remaining audit so the report still captures other findings, but the repository cannot receive a ready verdict while the README gate fails.
+Do not create or repair the README. A concise README does not need a standalone feature inventory or an enumeration of every control; continue into source inventory so reachable frontend and backend capabilities cannot escape validation. The repository cannot receive a ready verdict while the README gate fails.
 
 ### 3. Detect the declared stack and baseline
 
@@ -102,7 +103,13 @@ If local infrastructure is missing, exhaust safe discovery of an already-install
 
 ### 6. Build feature acceptance
 
-Create one row for every product feature documented in the README. Each row must identify:
+Create one row for every distinct product capability discovered from reachable UI controls and workflows, frontend API clients, or public backend product routes. Reconcile the inventory in both directions:
+
+- Every reachable frontend product capability must have a real backend request path and MongoDB persistence where data is involved.
+- Every public backend product route must have a reachable frontend consumer unless it is strictly operational, such as health reporting.
+- Every interactive UI path must have applicable loading, empty, disabled, validation, success, and error handling.
+
+Each row must identify:
 
 - frontend page, component, or interaction;
 - frontend API-client method or request;
@@ -113,7 +120,7 @@ Create one row for every product feature documented in the README. Each row must
 - applicable validation, authorization, loading, empty, and error handling;
 - final verdict.
 
-Fail a feature when either application side is absent, the frontend does not call the backend, local substitute data replaces the API, persistence is missing, or representative live behavior fails.
+Fail a feature when either application side is absent, a frontend interaction is disconnected, a product API has no frontend consumer, local substitute data replaces the API, persistence is missing, or representative live behavior fails.
 
 ### 7. Restore and report
 

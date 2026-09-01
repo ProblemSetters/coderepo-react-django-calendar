@@ -21,7 +21,7 @@ Write the final report outside the audited repository. Prefer a dedicated valida
 | Audit context | Repository, branch, commit, comparison baseline, detected stack, guideline path, and date. |
 | Verdict | One direct sentence stating whether the repository is ready and naming the largest blocker. |
 | Results | One row for every static and runtime check with ID, verdict, and concise direct evidence. |
-| Feature acceptance | One row for every README product feature with frontend, API, backend, persistence, runtime evidence, and verdict. |
+| Feature acceptance | One row for every product capability discovered from the reachable frontend, frontend API clients, or backend routes, with frontend, API, backend, persistence, runtime evidence, and verdict. |
 | Summary | Total counts for `PASS`, `FAIL`, `MANUAL`, and `N/A`, plus a one-sentence coverage statement. |
 | Failures to fix | Unresolved failures ordered by impact, each with location, evidence, and required outcome. |
 | Manual checks | Exact commands and expected evidence for every `MANUAL` item. State `None` when empty. |
@@ -43,7 +43,7 @@ Use these columns:
 | Feature | Frontend surface | Frontend request | Backend path | Persistence | Runtime evidence | Verdict |
 |---|---|---|---|---|---|---|
 
-The feature label must match a concrete capability in the root README. When one README bullet contains several independently meaningful capabilities, split it into separate rows so a partial implementation cannot receive a combined pass.
+Use concise user-outcome labels. Split independently meaningful capabilities and include every feature discovered from the implemented UI, API clients, or backend routes.
 
 ## Verdict wording
 
@@ -69,7 +69,7 @@ Do not prescribe a new library, framework, or stack migration as the fix.
 Before delivering the report, verify:
 
 - every checklist ID has a verdict;
-- every README feature has an acceptance row;
+- every discovered product capability has an acceptance row;
 - summary counts equal the tables;
 - every `FAIL` appears under failures to fix;
 - every `MANUAL` appears with exact steps;

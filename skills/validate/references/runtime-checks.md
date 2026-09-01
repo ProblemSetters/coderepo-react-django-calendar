@@ -27,7 +27,7 @@ If MongoDB or a required language runtime is unavailable, search safely for an a
 | R05 | Health and MongoDB | Call the documented health endpoint. | HTTP success explicitly reports MongoDB connected. | API is unhealthy, database is disconnected, or health hides database state. |
 | R06 | Seed baseline | Query or count all application collections after setup. | Counts and representative content match the documented seed baseline. | Collections are empty, duplicated, incomplete, or inconsistent. |
 | R07 | Authentication | Use README credentials, list/select profiles where applicable, and call a protected route with and without authorization. | Login and profile selection succeed; protected request is accepted with valid auth and rejected without it. | Credentials are wrong, tokens fail, profile context fails, or protection is missing. |
-| R08 | Feature APIs | Exercise representative read behavior for every README feature group. | Responses are successful, use expected shapes, and contain live seeded data. | Route is missing, response shape is inconsistent, or feature data is absent/substituted. |
+| R08 | Feature APIs | Exercise representative read behavior for every product group found through the bidirectional feature inventory. | Responses are successful, use expected shapes, and contain live seeded data. | Route is missing, response shape is inconsistent, or feature data is absent/substituted. |
 | R09 | Persistence | Exercise representative create, update, follow-up read, and delete behavior through the API; confirm MongoDB state. | Each operation persists, follow-up reads agree, and cleanup removes the validation record. | Writes are in-memory, follow-up reads disagree, delete fails, or residue remains. |
 | R10 | Validation and errors | Send representative invalid input, missing-resource, and unauthorized requests. | Appropriate non-500 statuses and concise errors are returned without stack leakage. | Unexpected 500, ambiguous success, leaked internals, or missing authorization. |
 | R11 | Restart reset | Make a reversible state change, restart the exact full application flow, and recheck seed counts/content. | Validation change disappears and the documented baseline is restored. | Ad hoc data survives or baseline changes unexpectedly. |
@@ -49,7 +49,7 @@ At minimum, cover these behavior classes when the product provides them:
 - one representative create/update/read/delete flow;
 - unauthorized, invalid-input, and missing-resource responses.
 
-For each README feature, record at least one live request that proves its backend path is reachable. For a write-heavy feature, code inspection alone is insufficient.
+For each discovered product capability, record at least one live request that proves its backend path is reachable. For a write-heavy feature, code inspection alone is insufficient.
 
 ## Persistence procedure
 
