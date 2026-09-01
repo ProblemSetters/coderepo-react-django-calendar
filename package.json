@@ -1,0 +1,22 @@
+{
+	"name": "calendar",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Calendar Scheduling App - React and Django",
+	"workspaces": [
+		"frontend"
+	],
+	"scripts": {
+		"postinstall": "bash setup.sh --ensure-seeded",
+		"prestart": "bash setup.sh --start",
+		"start": "concurrently \"bun run dev:backend\" \"bun run dev:frontend\"",
+		"dev:frontend": "cd frontend && bun run dev",
+		"dev:backend": "cd backend && ../.venv/bin/python manage.py runserver 0.0.0.0:8000",
+		"seed": "cd backend && ../.venv/bin/python scripts/seed.py",
+		"clear": "rm -rf node_modules/ bun.lock .venv .seed-signature && cd frontend && rm -rf node_modules/ .env && cd ..",
+		"test:task1": "cd backend && CALENDAR_TEST_DB=1 ../.venv/bin/python -m pytest tests/task1 --junitxml=../output/task1.xml"
+	},
+	"devDependencies": {
+		"concurrently": "9.2.1"
+	}
+}

@@ -1,0 +1,5 @@
+**/problem-statements/ export-ignore
+.prettierrc export-ignore
+.prettierignore export-ignore
+.editorconfig export-ignore
+docs/ export-ignore linguist-documentation
