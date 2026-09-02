@@ -231,7 +231,6 @@ The README must contain:
 6. **Run instructions:** the minimal install and full-start workflow.
 7. **Command reference:** every additional documented command and its purpose.
 8. **Seeded access:** copyable login credentials and any profile-selection explanation.
-9. **Guideline and skill workflow:** how an application author uses the guideline while creating a product and invokes validation after completion.
 
 The README fails validation when it is missing, placeholder content, materially incomplete, inconsistent with the repository, or claims behavior that cannot be mapped to both frontend and backend implementation.
 
