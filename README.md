@@ -28,8 +28,6 @@
 │   ├── src/features/            # Product views and interactions
 │   ├── src/shared/              # API client, reusable controls, and utilities
 │   └── public/                  # Local static media
-├── docs/                        # HackerRank Code Repo guidelines
-├── skills/validate/             # Read-only repository validation skill
 ├── .vscode/launch.json          # Django debugger configuration
 ├── hackerrank.yml               # HackerRank install and run configuration
 └── setup.sh                     # Python, MongoDB, and seed setup
@@ -93,13 +91,3 @@ The frontend runs on port `3000`, the API runs on port `8000`, and health is ava
 | `bun run dev:frontend` | Starts only Vite on port `3000`. |
 
 HackerRank installs the application with `bun install && bash setup.sh --seed` and runs it with `bun start`.
-
-## Validate the Repository
-
-Follow the [HackerRank Code Repo Guidelines](docs/HackerRank-Code-Repo-Guidelines.md) while creating the application to keep its structure, setup, and product behavior aligned.
-
-When complete, validate the repository in Codex or Claude Code with this prompt:
-
-```text
-Read and follow skills/validate/SKILL.md to validate this complete Code Repo application against docs/HackerRank-Code-Repo-Guidelines.md. Run the in-scope static, install, build, start, API, and MongoDB checks, then write the report outside the repository.
-```
