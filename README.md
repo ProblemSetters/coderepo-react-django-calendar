@@ -28,7 +28,6 @@
 │   ├── src/features/            # Product views and interactions
 │   ├── src/shared/              # API client, reusable controls, and utilities
 │   └── public/                  # Local static media
-├── docs/                        # HackerRank Code Repo guidelines
 ├── .vscode/launch.json          # Django debugger configuration
 ├── hackerrank.yml               # HackerRank install and run configuration
 └── setup.sh                     # Python, MongoDB, and seed setup
@@ -95,6 +94,4 @@ HackerRank installs the application with `bun install && bash setup.sh --seed` a
 
 ## Validate the Repository
 
-Follow the [HackerRank Code Repo Guidelines](docs/HackerRank-Code-Repo-Guidelines.md) while creating the application to keep its structure, setup, and product behavior aligned.
-
-The validation skill is not part of this repository. It ships with the assignment guidelines repo. Follow that repo's README to run it against this application.
+The HackerRank Code Repo guidelines and the validation skill are not part of this repository. They ship with the assignment guidelines repo. Follow that repo's README to build against the guidelines and run the validator on this application.
