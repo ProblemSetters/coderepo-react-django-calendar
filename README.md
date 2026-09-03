@@ -29,7 +29,6 @@
 │   ├── src/shared/              # API client, reusable controls, and utilities
 │   └── public/                  # Local static media
 ├── docs/                        # HackerRank Code Repo guidelines
-├── skills/validate/             # Read-only repository validation skill
 ├── .vscode/launch.json          # Django debugger configuration
 ├── hackerrank.yml               # HackerRank install and run configuration
 └── setup.sh                     # Python, MongoDB, and seed setup
@@ -98,8 +97,4 @@ HackerRank installs the application with `bun install && bash setup.sh --seed` a
 
 Follow the [HackerRank Code Repo Guidelines](docs/HackerRank-Code-Repo-Guidelines.md) while creating the application to keep its structure, setup, and product behavior aligned.
 
-When complete, validate the repository in Codex or Claude Code with this prompt:
-
-```text
-Read and follow skills/validate/SKILL.md to validate this complete Code Repo application against docs/HackerRank-Code-Repo-Guidelines.md. Run the in-scope static, install, build, start, API, and MongoDB checks, then write the report outside the repository.
-```
+The validation skill is not part of this repository. It ships with the assignment guidelines repo. Follow that repo's README to run it against this application.
