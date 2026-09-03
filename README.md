@@ -91,7 +91,3 @@ The frontend runs on port `3000`, the API runs on port `8000`, and health is ava
 | `bun run dev:frontend` | Starts only Vite on port `3000`. |
 
 HackerRank installs the application with `bun install && bash setup.sh --seed` and runs it with `bun start`.
-
-## Validate the Repository
-
-The HackerRank Code Repo guidelines and the validation skill are not part of this repository. They ship with the assignment guidelines repo. Follow that repo's README to build against the guidelines and run the validator on this application.
