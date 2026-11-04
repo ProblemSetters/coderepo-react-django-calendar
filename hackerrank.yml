@@ -2,14 +2,11 @@ version: 1.0
 configuration:
   has_webserver: true
   scoring:
-    command: rm -f output/backend.xml output/frontend.xml && bun install && bash setup.sh --seed; bun run test
+    command: rm -rf output && bun install && bash setup.sh --seed; bun run test
     files:
-      - output/backend.xml
-      - output/frontend.xml
+      - output/junit.xml
   readonly_paths:
-    - hackerrank.yml
     - setup.sh
-    - scripts/**
     - backend/tests/**
     - backend/conftest.py
     - backend/pytest.ini
@@ -25,7 +22,7 @@ configuration:
     project_menu:
       run: bun start
       install: bun install && bash setup.sh --seed
-      test: rm -f output/backend.xml output/frontend.xml && bun run test
+      test: bun run test
     ports_settings:
       "3000":
         name: Frontend

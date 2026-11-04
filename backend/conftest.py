@@ -7,7 +7,6 @@ import bcrypt
 import pytest
 from dotenv import load_dotenv
 
-SCORING_RUN = "scoring"
 DEFAULT_URI = "mongodb://localhost:27017/calendar_db"
 PING_TIMEOUT_MS = 3000
 # The app hashes with its own cost. Tests only need a valid hash, so they use the cheapest one.
@@ -15,10 +14,6 @@ TEST_HASH_ROUNDS = 4
 
 # Filled in by pytest_configure: the app's database name, the name of this run's database and its URI.
 run = SimpleNamespace(app_database="", database="", uri="", is_ready=False)
-
-
-def is_scoring_run():
-    return os.environ.get("TEST_RUN") == SCORING_RUN
 
 
 def with_database(uri, database):
@@ -31,8 +26,7 @@ def pytest_configure(config):
     load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
     app_uri = os.environ.get("MONGODB_URI", DEFAULT_URI)
     run.app_database = urlsplit(app_uri).path.lstrip("/") or "calendar_db"
-    run_id = SCORING_RUN if is_scoring_run() else str(os.getpid())
-    run.database = f"{run.app_database}_test_{run_id}"
+    run.database = f"{run.app_database}_test_{os.getpid()}"
     run.uri = with_database(app_uri, run.database)
     os.environ["MONGODB_URI"] = run.uri
     os.environ.setdefault("JWT_SECRET", "calendar-test-secret")
@@ -90,9 +84,6 @@ def pytest_sessionstart(session):
         )
     client = mongoengine.get_connection()
     drop_finished_runs_databases(client)
-    if is_scoring_run():
-        # A Run Tests stopped before its teardown leaves its data behind, so every Run Tests starts empty.
-        drop_test_database(client, run.database)
     # Builds every declared index before a test relies on it, such as the unique calendar name.
     for model in declared_models():
         model.ensure_indexes()

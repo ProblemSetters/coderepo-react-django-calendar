@@ -12,11 +12,12 @@
 		"dev:frontend": "cd frontend && bun run dev",
 		"dev:backend": "cd backend && ../.venv/bin/python manage.py runserver 0.0.0.0:8000",
 		"seed": "cd backend && ../.venv/bin/python scripts/seed.py",
-		"test": "node scripts/run-tests.cjs",
+		"test": "rm -rf output .cache/junit; PYTEST_ADDOPTS=--junitxml=$PWD/.cache/junit/backend.xml bun run test:backend; backend=$?; [ -s .cache/junit/backend.xml ] || { echo \"Backend tests ended without writing results.\"; backend=1; }; VITEST_JUNIT_FILE=$PWD/.cache/junit/frontend.xml bun run test:frontend; frontend=$?; [ -s .cache/junit/frontend.xml ] || { echo \"Frontend tests ended without writing results.\"; frontend=1; }; mkdir -p output && jrm output/junit.xml '.cache/junit/*.xml'; merged=$?; exit $((backend || frontend || merged))",
 		"test:backend": "cd backend && ../.venv/bin/python -m pytest",
 		"test:frontend": "cd frontend && bun run test"
 	},
 	"devDependencies": {
-		"concurrently": "9.2.1"
+		"concurrently": "9.2.1",
+		"junit-report-merger": "9.0.4"
 	}
 }
