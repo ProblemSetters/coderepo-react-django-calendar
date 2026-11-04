@@ -11,7 +11,10 @@
 		"start": "concurrently \"bun run dev:backend\" \"bun run dev:frontend\"",
 		"dev:frontend": "cd frontend && bun run dev",
 		"dev:backend": "cd backend && ../.venv/bin/python manage.py runserver 0.0.0.0:8000",
-		"seed": "cd backend && ../.venv/bin/python scripts/seed.py"
+		"seed": "cd backend && ../.venv/bin/python scripts/seed.py",
+		"test": "node scripts/run-tests.cjs",
+		"test:backend": "cd backend && ../.venv/bin/python -m pytest",
+		"test:frontend": "cd frontend && bun run test"
 	},
 	"devDependencies": {
 		"concurrently": "9.2.1"
