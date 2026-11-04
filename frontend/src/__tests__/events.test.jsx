@@ -4,6 +4,7 @@ import { CalendarWorkspace } from "../App.jsx";
 import { endScreenSession, installApi, profile, reply, startScreenSession } from "./support/app-test-kit.js";
 
 const standup = { _id: "e1", calendarId: "c1", title: "Team standup", type: "event", startAt: "2030-06-03T09:00:00.000Z", endAt: "2030-06-03T09:30:00.000Z", allDay: false, editable: true, location: "Room 4", description: "Daily sync" };
+const invite = { _id: "e2", calendarId: "c1", title: "Quarterly review", type: "event", startAt: "2030-06-04T10:00:00.000Z", endAt: "2030-06-04T11:00:00.000Z", allDay: false, editable: false, organizer: "Jordan Lee", responseStatus: "needsAction" };
 
 const renderWorkspace = () => render(<CalendarWorkspace activeProfile={profile} onLogout={vi.fn()} onSwitchProfile={vi.fn()} />);
 
@@ -52,6 +53,22 @@ describe("event editor", () => {
         expect(api.find("POST", "/events")).toHaveLength(0);
         expect(screen.getByTestId("event-title-input")).toBeTruthy();
     });
+
+    test("saves a weekly repeat chosen in the editor", async () => {
+        const api = installApi({
+            "POST /events": (call) => reply(201, { data: { _id: "e9", editable: true, ...call.body } }),
+        });
+        renderWorkspace();
+
+        fireEvent.change(await openEventEditor(), { target: { value: "Weekly sync" } });
+        fireEvent.click(screen.getByRole("combobox", { name: "Repeat" }));
+        fireEvent.click(screen.getByRole("option", { name: "Weekly on Monday" }));
+        fireEvent.click(screen.getByTestId("save-event-button"));
+
+        await waitFor(() => expect(api.find("POST", "/events")).toHaveLength(1));
+        expect(api.find("POST", "/events")[0].body.recurrence).toMatchObject({ frequency: "weekly", interval: 1, daysOfWeek: [1], endType: "never", count: null, until: null });
+        await waitFor(() => expect(screen.queryByTestId("event-title-input")).toBeNull());
+    });
 });
 
 describe("event preview", () => {
@@ -83,5 +100,30 @@ describe("event preview", () => {
         await waitFor(() => expect(screen.queryByTestId("event-chip-e1")).toBeNull());
         expect(api.find("DELETE", "/events/e1")).toHaveLength(1);
         expect(screen.queryByRole("heading", { name: "Team standup" })).toBeNull();
+    });
+
+    test("answers an invitation with Yes and shows that answer as chosen", async () => {
+        let current = invite;
+        const api = installApi({
+            "GET /events": () => [current],
+            "PATCH /events/e2/response": (call) => {
+                current = { ...invite, responseStatus: call.body.status };
+                return current;
+            },
+        });
+        renderWorkspace();
+
+        fireEvent.click(await screen.findByTestId("event-chip-e2"));
+
+        expect(await screen.findByText("Organized by Jordan Lee")).toBeTruthy();
+        expect(screen.queryByTestId("preview-edit")).toBeNull();
+        expect(screen.queryByTestId("preview-delete")).toBeNull();
+        expect(screen.getByTestId("rsvp-accepted").getAttribute("aria-pressed")).toBe("false");
+
+        fireEvent.click(screen.getByTestId("rsvp-accepted"));
+
+        await waitFor(() => expect(screen.getByTestId("rsvp-accepted").getAttribute("aria-pressed")).toBe("true"));
+        expect(api.find("PATCH", "/events/e2/response").map((call) => call.body)).toEqual([{ status: "accepted" }]);
+        expect(screen.getByTestId("rsvp-declined").getAttribute("aria-pressed")).toBe("false");
     });
 });

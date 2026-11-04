@@ -1,7 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { CalendarWorkspace } from "../App.jsx";
-import { endScreenSession, failure, installApi, profile, reply, startScreenSession } from "./support/app-test-kit.js";
+import { endScreenSession, failure, installApi, profile, reply, startScreenSession, workCalendar } from "./support/app-test-kit.js";
 
 const renderWorkspace = () => render(<CalendarWorkspace activeProfile={profile} onLogout={vi.fn()} onSwitchProfile={vi.fn()} />);
 
@@ -39,5 +39,23 @@ describe("calendars in the sidebar", () => {
         expect((await screen.findByRole("alert")).textContent).toBe("A calendar with this name already exists.");
         expect(api.find("POST", "/calendars")).toHaveLength(1);
         expect(screen.getByTestId("calendar-name-input").value).toBe("Work");
+    });
+
+    test("shows only the chosen calendar from its options menu", async () => {
+        const personal = { _id: "c2", name: "Personal", color: "#0b8043", visible: true, isPrimary: false, timeZone: "UTC" };
+        const api = installApi({
+            "GET /calendars": [workCalendar, personal],
+            "POST /calendars/c2/display-only": [{ ...workCalendar, visible: false }, personal],
+        });
+        renderWorkspace();
+
+        fireEvent.click(await screen.findByRole("button", { name: "Manage Personal" }));
+        fireEvent.click(await screen.findByRole("menuitem", { name: "Display this only" }));
+
+        await waitFor(() => expect(screen.getByTestId("calendar-toggle-c1").checked).toBe(false));
+        expect(screen.getByTestId("calendar-toggle-c2").checked).toBe(true);
+        expect(api.find("POST", "/calendars/c2/display-only")).toHaveLength(1);
+        await waitFor(() => expect(api.find("GET", "/events").at(-1).query.get("calendarIds")).toBe("c2"));
+        expect(screen.queryByRole("menu", { name: "Personal options" })).toBeNull();
     });
 });

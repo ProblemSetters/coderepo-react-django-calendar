@@ -9,6 +9,8 @@ function signIn(email, password) {
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
 }
 
+const teamProfile = { _id: "p2", name: "Jordan Lee", email: "jordan@example.com", avatarColor: "#0b8043" };
+
 describe("sign-in screen", () => {
     beforeEach(startScreenSession);
     afterEach(endScreenSession);
@@ -42,5 +44,30 @@ describe("sign-in screen", () => {
         expect(screen.getByTestId("password-input")).toBeTruthy();
         expect(screen.queryByTestId("create-event-button")).toBeNull();
         expect(api.find("GET", "/profiles")).toHaveLength(0);
+    });
+});
+
+describe("switching profile", () => {
+    beforeEach(startScreenSession);
+    afterEach(endScreenSession);
+
+    test("lists only the other profiles and reopens the calendar as the chosen one", async () => {
+        const api = installApi({
+            "POST /auth/login": { token: "session-token", account },
+            "GET /profiles": [profile, teamProfile],
+            "POST /auth/switch-profile": (call) => ({ token: `profile-token-${call.body.profileId}` }),
+        });
+        render(<App />);
+        signIn("asha@example.com", "correct-horse");
+
+        fireEvent.click(await screen.findByRole("button", { name: "Asha Rao profile" }));
+        fireEvent.click(screen.getByRole("menuitem", { name: "Switch profile" }));
+
+        expect(await screen.findByText("Signed in as Asha Rao")).toBeTruthy();
+        expect(screen.queryByRole("button", { name: "Continue as Asha Rao" })).toBeNull();
+        fireEvent.click(screen.getByRole("button", { name: "Continue as Jordan Lee" }));
+
+        expect(await screen.findByRole("button", { name: "Jordan Lee profile" })).toBeTruthy();
+        expect(api.find("POST", "/auth/switch-profile").map((call) => call.body)).toEqual([{ profileId: "p1" }, { profileId: "p2" }]);
     });
 });
