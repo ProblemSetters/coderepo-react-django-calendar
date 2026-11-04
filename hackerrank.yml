@@ -2,7 +2,7 @@ version: 1.0
 configuration:
   has_webserver: true
   scoring:
-    command: rm -f output/backend.xml output/frontend.xml && bun install && bash setup.sh --seed && bun run test
+    command: rm -f output/backend.xml output/frontend.xml && bun install && bash setup.sh --seed; bun run test
     files:
       - output/backend.xml
       - output/frontend.xml
