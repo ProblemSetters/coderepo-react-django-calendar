@@ -71,3 +71,19 @@ def test_a_repeat_keeps_its_local_time_across_a_daylight_saving_change():
         "2030-03-04T14:00:00.000Z",
         "2030-03-11T13:00:00.000Z",
     ]
+
+
+def test_a_yearly_repeat_lands_on_the_same_date_each_year_and_an_every_other_day_repeat_skips_a_day():
+    yearly = repeating("2030-06-03T10:00:00.000Z", "2030-06-03T11:00:00.000Z", frequency="yearly", endType="never")
+    every_other_day = repeating("2030-06-03T10:00:00.000Z", "2030-06-03T10:30:00.000Z", frequency="daily", interval=2, endType="never")
+
+    assert starts_of(yearly, "2030-01-01T00:00:00.000Z", "2033-01-01T00:00:00.000Z") == [
+        "2030-06-03T10:00:00.000Z",
+        "2031-06-03T10:00:00.000Z",
+        "2032-06-03T10:00:00.000Z",
+    ]
+    assert starts_of(every_other_day, "2030-06-01T00:00:00.000Z", "2030-06-09T00:00:00.000Z") == [
+        "2030-06-03T10:00:00.000Z",
+        "2030-06-05T10:00:00.000Z",
+        "2030-06-07T10:00:00.000Z",
+    ]

@@ -126,4 +126,27 @@ describe("event preview", () => {
         expect(api.find("PATCH", "/events/e2/response").map((call) => call.body)).toEqual([{ status: "accepted" }]);
         expect(screen.getByTestId("rsvp-declined").getAttribute("aria-pressed")).toBe("false");
     });
+
+    test("edits an event from its preview and shows the new title", async () => {
+        let current = standup;
+        const api = installApi({
+            "GET /events": () => [current],
+            "PATCH /events/e1": (call) => {
+                current = { ...standup, ...call.body };
+                return current;
+            },
+        });
+        renderWorkspace();
+
+        fireEvent.click(await screen.findByTestId("event-chip-e1"));
+        fireEvent.click(await screen.findByTestId("preview-edit"));
+        const titleInput = await screen.findByTestId("event-title-input");
+        expect(titleInput.value).toBe("Team standup");
+        fireEvent.change(titleInput, { target: { value: "Team standup (Room 6)" } });
+        fireEvent.click(screen.getByTestId("save-event-button"));
+
+        expect(await screen.findByRole("button", { name: /Team standup \(Room 6\)/ })).toBeTruthy();
+        expect(api.find("PATCH", "/events/e1")[0].body).toMatchObject({ title: "Team standup (Room 6)", calendarId: "c1", startAt: standup.startAt, endAt: standup.endAt });
+        expect(api.find("POST", "/events")).toHaveLength(0);
+    });
 });

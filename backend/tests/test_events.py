@@ -105,3 +105,36 @@ def test_deletes_an_event_and_treats_a_malformed_id_as_not_found(alex, calendars
     assert deleted.status_code == 204
     assert after_delete.status_code == 404
     assert [malformed.status_code, error_code(malformed)] == [404, "EVENT_NOT_FOUND"]
+
+
+def test_keeps_answers_when_a_guest_is_added_shuts_out_a_removed_guest_and_resets_answers_when_the_repeat_rule_changes(alex, jordan, taylor, calendars, people):
+    created = alex.post("/api/v1/events", inviting_jordan(calendars, people, recurrence=WEEKLY))
+    path = f"/api/v1/events/{created.json()['data']['_id']}"
+    jordan.patch(f"{path}/response", {"status": "accepted"})
+
+    # The editor always sends the guest names and their ids together, so the test does the same.
+    def guests(*guest_people):
+        return {"participants": [person.name for person in guest_people], "participantIds": [str(person.id) for person in guest_people]}
+
+    added = alex.patch(path, guests(people.jordan, people.taylor))
+    taylor.patch(f"{path}/response", {"status": "accepted"})
+    removed = alex.patch(path, guests(people.taylor))
+    removed_guest_opens = jordan.get(path)
+    alex.patch(path, {"recurrence": {**WEEKLY, "daysOfWeek": [1, 3]}})
+    after_rule_change = taylor.get(path)
+
+    assert [[guest["name"], guest["responseStatus"]] for guest in added.json()["data"]["participantPeople"]] == [["Jordan Smith", "accepted"], ["Taylor Johnson", "needsAction"]]
+    assert [[guest["name"], guest["responseStatus"]] for guest in removed.json()["data"]["participantPeople"]] == [["Taylor Johnson", "accepted"]]
+    assert removed_guest_opens.status_code == 404
+    assert after_rule_change.json()["data"]["responseStatus"] == "needsAction"
+
+
+def test_refuses_a_guest_id_that_is_malformed_unknown_or_listed_twice(alex, calendars, people):
+    jordan_id = str(people.jordan.id)
+    malformed = alex.post("/api/v1/events", event_body(calendars.alex_work, participantIds=["not-an-id"]))
+    unknown = alex.post("/api/v1/events", event_body(calendars.alex_work, participantIds=["0123456789abcdef01234567"]))
+    twice = alex.post("/api/v1/events", event_body(calendars.alex_work, participantIds=[jordan_id, jordan_id]))
+
+    assert [malformed.status_code, error_code(malformed)] == [400, "VALIDATION_ERROR"]
+    assert [unknown.status_code, error_code(unknown)] == [404, "PEOPLE_NOT_FOUND"]
+    assert [twice.status_code, error_code(twice)] == [400, "VALIDATION_ERROR"]

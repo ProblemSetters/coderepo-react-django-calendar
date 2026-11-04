@@ -1,4 +1,4 @@
-from tests.support import PASSWORD, ApiClient, error_code, sign_in, sign_in_workspace
+from tests.support import PASSWORD, ApiClient, deactivate_account, error_code, revoke_profile_access, sign_in, sign_in_workspace
 
 
 def test_signs_in_with_the_right_password_and_refuses_a_wrong_one(people):
@@ -55,3 +55,15 @@ def test_returns_the_signed_in_account_and_signs_out(people):
     assert session.status_code == 200
     assert session.json()["data"]["account"]["email"] == people.alex.email
     assert signed_out.status_code == 204
+
+
+def test_stops_accepting_a_token_once_the_account_loses_that_profile_or_is_switched_off(people):
+    token = sign_in(people.alex)
+
+    revoke_profile_access(people.alex)
+    profile_revoked = ApiClient(token).get("/api/v1/calendars")
+    deactivate_account(people.alex)
+    account_off = ApiClient(token).get("/api/v1/calendars")
+
+    assert [profile_revoked.status_code, error_code(profile_revoked)] == [403, "PROFILE_FORBIDDEN"]
+    assert [account_off.status_code, error_code(account_off)] == [401, "ACCOUNT_UNAVAILABLE"]

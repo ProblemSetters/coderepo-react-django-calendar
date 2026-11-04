@@ -1,5 +1,7 @@
 from django.test import Client
 
+from apps.auth.models import WorkspaceAccount
+
 PASSWORD = "Calendar#2026"
 WEEKLY = {"frequency": "weekly", "interval": 1, "daysOfWeek": [1], "endType": "never", "timeZone": "UTC"}
 
@@ -57,3 +59,12 @@ def matches(actual, expected):
     if isinstance(expected, list):
         return isinstance(actual, list) and len(actual) == len(expected) and all(matches(a, e) for a, e in zip(actual, expected))
     return actual == expected
+
+
+# Change an account behind the app's back, the way an admin taking access away would.
+def revoke_profile_access(person):
+    WorkspaceAccount.objects(email=person.email).update_one(set__allowed_profile_ids=[])
+
+
+def deactivate_account(person):
+    WorkspaceAccount.objects(email=person.email).update_one(set__active=False)

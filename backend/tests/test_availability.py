@@ -72,3 +72,20 @@ def test_checks_the_rules_for_a_suggestion_request(alex, people):
 
     for response in (odd_duration, too_many_days, same_person_twice):
         assert [response.status_code, error_code(response)] == [400, "VALIDATION_ERROR"]
+
+
+def test_never_suggests_a_time_that_has_passed_and_cuts_an_event_that_started_earlier_to_the_asked_time(alex, jordan, calendars, people):
+    jordan.post(
+        "/api/v1/events",
+        event_body(calendars.jordan_primary, title="Workshop", startAt="2030-06-03T09:00:00.000Z", endAt="2030-06-03T11:00:00.000Z"),
+    )
+
+    past = suggestions(alex, people, **{"from": "2020-06-01"})
+    overlapping = conflicts_for(alex, people, "2030-06-03T10:30:00.000Z", "2030-06-03T11:30:00.000Z")
+
+    assert past.status_code == 200
+    assert past.json()["data"]["suggestions"] == []
+    assert overlapping.json()["data"]["available"] is False
+    assert [[[block["title"], block["startAt"], block["endAt"]] for block in conflict["busy"]] for conflict in overlapping.json()["data"]["conflicts"]] == [
+        [["Workshop", "2030-06-03T10:30:00.000Z", "2030-06-03T11:00:00.000Z"]],
+    ]

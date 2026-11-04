@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { CalendarWorkspace } from "../App.jsx";
 import { endScreenSession, installApi, profile, startScreenSession } from "./support/app-test-kit.js";
@@ -63,6 +63,39 @@ describe("find a time", () => {
             days: 5,
             durationMinutes: 60,
         });
+    });
+});
+
+describe("meet with", () => {
+    beforeEach(startScreenSession);
+    afterEach(endScreenSession);
+
+    test("compares the chosen person's day and books one of the suggested times", async () => {
+        const ravi = { _id: "64b7f0a1c2d3e4f5a6b7c8d9", name: "Ravi Menon", email: "ravi@example.com", avatarColor: "#d93025" };
+        const hours = { startMinute: 9 * 60, endMinute: 17 * 60 };
+        const workday = [{ startAt: "2030-06-03T09:00:00.000Z", endAt: "2030-06-03T17:00:00.000Z" }];
+        const api = installApi({
+            "GET /people": [ravi],
+            "POST /availability/suggestions": {
+                owner: { name: "Asha Rao", timeZone: "UTC", workingHours: hours, workingIntervals: workday, busy: [] },
+                participants: [{ person: { ...ravi, timeZone: "UTC", workingHours: hours }, workingIntervals: workday, busy: [{ _id: "b1", title: "Busy", startAt: "2030-06-03T10:00:00.000Z", endAt: "2030-06-03T11:00:00.000Z" }] }],
+                suggestions: [{ startAt: "2030-06-03T13:00:00.000Z", endAt: "2030-06-03T13:30:00.000Z", attendeeCount: 2 }],
+            },
+        });
+        renderWorkspace();
+
+        fireEvent.focus(await screen.findByTestId("people-search-input"));
+        fireEvent.click(await screen.findByTestId(`people-option-${ravi._id}`));
+        expect(await screen.findByLabelText(/Ravi.* schedule/)).toBeTruthy();
+        fireEvent.click(screen.getByRole("button", { name: /Suggested times/ }));
+        fireEvent.click(await screen.findByTestId("suggested-time-2030-06-03T13:00:00.000Z"));
+
+        expect((await screen.findByTestId("event-title-input")).value).toBe("Meeting with Ravi Menon");
+        expect(screen.getByTestId(`guest-remove-${ravi._id}`)).toBeTruthy();
+        await waitFor(() => expect(api.find("POST", "/availability/suggestions").length).toBeGreaterThanOrEqual(2));
+        const bodies = api.find("POST", "/availability/suggestions").map((call) => call.body);
+        expect(bodies).toContainEqual(expect.objectContaining({ participantIds: [ravi._id], from: "2030-06-03", days: 1 }));
+        expect(bodies).toContainEqual(expect.objectContaining({ participantIds: [ravi._id], from: "2030-06-03", days: 5, durationMinutes: 30 }));
     });
 });
 
