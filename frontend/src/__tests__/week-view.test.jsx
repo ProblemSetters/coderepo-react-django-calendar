@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { CalendarWorkspace } from "../App.jsx";
 import { endScreenSession, installApi, profile, startScreenSession } from "./support/app-test-kit.js";
@@ -61,5 +61,28 @@ describe("month view", () => {
         expect((await screen.findByTestId("event-chip-e5")).getAttribute("aria-label")).toMatch(/^Team offsite/);
         const monthLoad = api.find("GET", "/events").at(-1).query;
         expect([monthLoad.get("from"), monthLoad.get("to")]).toEqual(["2030-05-26T00:00:00.000Z", "2030-07-07T00:00:00.000Z"]);
+    });
+});
+
+describe("mini calendar", () => {
+    beforeEach(startScreenSession);
+    afterEach(endScreenSession);
+
+    test("jumps the week view to a date picked in the next month", async () => {
+        const retreat = { _id: "e6", calendarId: "c1", title: "Summer retreat", type: "event", startAt: "2030-07-17T10:00:00.000Z", endAt: "2030-07-17T12:00:00.000Z", allDay: false, editable: true };
+        const inRange = (call) => new Date(call.query.get("from")) < new Date(retreat.endAt) && new Date(call.query.get("to")) > new Date(retreat.startAt);
+        const api = installApi({ "GET /events": (call) => (inRange(call) ? [retreat] : []) });
+        renderWorkspace();
+        const miniCalendar = await screen.findByRole("region", { name: "Mini calendar" });
+        expect(within(miniCalendar).getByText("June 2030")).toBeTruthy();
+
+        fireEvent.click(within(miniCalendar).getByTestId("mini-calendar-next"));
+        expect(within(miniCalendar).getByText("July 2030")).toBeTruthy();
+        fireEvent.click(within(miniCalendar).getByTestId("mini-calendar-day-2030-07-17"));
+
+        expect(await screen.findByRole("button", { name: /Summer retreat/ })).toBeTruthy();
+        const weekLoad = api.find("GET", "/events").at(-1).query;
+        expect([weekLoad.get("from"), weekLoad.get("to")]).toEqual(["2030-07-14T00:00:00.000Z", "2030-07-21T00:00:00.000Z"]);
+        expect(within(miniCalendar).getByTestId("mini-calendar-day-2030-07-17").className).toContain("selected");
     });
 });

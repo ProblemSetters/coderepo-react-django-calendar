@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { CalendarWorkspace } from "../App.jsx";
 import { endScreenSession, installApi, profile, startScreenSession } from "./support/app-test-kit.js";
@@ -27,6 +27,48 @@ describe("quick search", () => {
         const [request] = api.find("GET", "/events/search");
         expect(request.query.get("what")).toBe("budget");
         expect(request.query.get("calendarIds")).toBe("c1");
+    });
+});
+
+describe("advanced search", () => {
+    beforeEach(startScreenSession);
+    afterEach(endScreenSession);
+
+    test("sends the place, excluded words and dates, and refuses a range that ends before it starts", async () => {
+        const api = installApi({
+            "GET /events/search": [
+                { _id: "s2", calendarId: "c1", title: "Quarterly planning", type: "event", startAt: "2030-06-11T10:00:00.000Z", endAt: "2030-06-11T11:00:00.000Z", allDay: false, location: "Boardroom" },
+            ],
+        });
+        renderWorkspace();
+
+        fireEvent.click(await screen.findByTestId("search-open"));
+        fireEvent.click(await screen.findByRole("button", { name: "Show search options" }));
+        const panel = screen.getByRole("region", { name: "Search events" });
+        fireEvent.change(within(panel).getByLabelText("Where"), { target: { value: "Boardroom" } });
+        fireEvent.change(within(panel).getByLabelText("Doesn't have"), { target: { value: "draft" } });
+        fireEvent.change(within(panel).getByLabelText("From date"), { target: { value: "2030-06-12" } });
+        fireEvent.change(within(panel).getByLabelText("To date"), { target: { value: "2030-06-10" } });
+
+        expect(within(panel).getByRole("alert").textContent).toBe("To date must be on or after From date.");
+        expect(within(panel).getByRole("button", { name: "Search" }).disabled).toBe(true);
+        expect(api.find("GET", "/events/search")).toHaveLength(0);
+
+        fireEvent.change(within(panel).getByLabelText("From date"), { target: { value: "2030-06-10" } });
+        fireEvent.change(within(panel).getByLabelText("To date"), { target: { value: "2030-06-12" } });
+        fireEvent.click(within(panel).getByRole("button", { name: "Search" }));
+
+        expect(await screen.findByText("Quarterly planning")).toBeTruthy();
+        expect(screen.getByText("Results for place: Boardroom · excluding: draft")).toBeTruthy();
+        // The To date is inclusive, so the search runs up to the midnight after it.
+        const [request] = api.find("GET", "/events/search");
+        expect(Object.fromEntries(request.query)).toEqual({
+            calendarIds: "c1",
+            where: "Boardroom",
+            exclude: "draft",
+            from: "2030-06-10T00:00:00.000Z",
+            to: "2030-06-13T00:00:00.000Z",
+        });
     });
 });
 
@@ -115,5 +157,41 @@ describe("time insights", () => {
         const [request] = api.find("GET", "/insights/daily");
         expect(request.query.get("from")).toBe("2030-06-03T00:00:00.000Z");
         expect(request.query.get("to")).toBe("2030-06-04T00:00:00.000Z");
+    });
+
+    test("opens the breakdown by type and by calendar, and schedules focus time from it", async () => {
+        installApi({
+            "GET /insights/daily": {
+                meetingMinutes: 150,
+                averageDailyMeetingMinutes: 60,
+                workingDayMinutes: 480,
+                totalScheduledMinutes: 210,
+                remainingMinutes: 270,
+                categories: [
+                    { key: "meetings", label: "Meetings", color: "#1a73e8", minutes: 150 },
+                    { key: "focus", label: "Focus time", color: "#039be5", minutes: 60 },
+                ],
+                calendars: [
+                    { calendarId: "c1", name: "Work", color: "#1a73e8", minutes: 180 },
+                    { calendarId: "c2", name: "Personal", color: "#0b8043", minutes: 30 },
+                ],
+            },
+        });
+        renderWorkspace();
+        const rows = (drawer) => [...drawer.querySelectorAll(".insight-metric")].map((row) => [row.querySelector("span").textContent, row.querySelector("strong").textContent]);
+
+        fireEvent.click(await screen.findByTestId("more-insights"));
+        const drawer = await screen.findByRole("dialog", { name: /Time Insights/ });
+        expect(within(drawer).getByText(/JUN 3, 2030/)).toBeTruthy();
+        expect(within(drawer).getByText("3.5 hr")).toBeTruthy();
+        expect(rows(drawer)).toEqual([["Meetings", "2.5 hr"], ["Focus time", "1 hr"], ["Remaining time", "4.5 hr"]]);
+
+        fireEvent.click(within(drawer).getByRole("button", { name: /By calendar/ }));
+        expect(within(drawer).getByRole("button", { name: /By calendar/ }).getAttribute("aria-pressed")).toBe("true");
+        expect(rows(drawer)).toEqual([["Work", "3 hr"], ["Personal", "0.5 hr"], ["Remaining time", "4.5 hr"]]);
+
+        fireEvent.click(within(drawer).getByTestId("schedule-focus-time"));
+        expect((await screen.findByRole("tab", { name: "Focus time" })).getAttribute("aria-selected")).toBe("true");
+        expect(screen.queryByRole("dialog", { name: /Time Insights/ })).toBeNull();
     });
 });
