@@ -1,9 +1,19 @@
 version: 1.0
 configuration:
   has_webserver: true
+  scoring:
+    command: rm -rf output && bun install && bash setup.sh --seed; bun run test
+    files:
+      - output/junit.xml
   readonly_paths:
+    - setup.sh
+    - backend/tests/**
+    - backend/conftest.py
+    - backend/pytest.ini
     - backend/scripts/**
     - backend/calendar_backend/settings.py
+    - frontend/src/__tests__/**
+    - frontend/vitest.config.js
     - frontend/vite.config.js
   ide_config:
     default_open_files:
@@ -12,3 +22,12 @@ configuration:
     project_menu:
       run: bun start
       install: bun install && bash setup.sh --seed
+      test: bun run test
+    ports_settings:
+      "3000":
+        name: Frontend
+        hidePreview: false
+        primary: true
+      "8000":
+        name: Backend
+        hidePreview: true

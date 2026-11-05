@@ -11,9 +11,13 @@
 		"start": "concurrently \"bun run dev:backend\" \"bun run dev:frontend\"",
 		"dev:frontend": "cd frontend && bun run dev",
 		"dev:backend": "cd backend && ../.venv/bin/python manage.py runserver 0.0.0.0:8000",
-		"seed": "cd backend && ../.venv/bin/python scripts/seed.py"
+		"seed": "cd backend && ../.venv/bin/python scripts/seed.py",
+		"test": "rm -rf output .cache/junit; bun run test:backend; backend=$?; bun run test:frontend; frontend=$?; mkdir -p output && jrm output/junit.xml '.cache/junit/**/*.xml' || exit 1; exit $((backend || frontend))",
+		"test:backend": "cd backend && ../.venv/bin/python -m pytest",
+		"test:frontend": "cd frontend && bun run test"
 	},
 	"devDependencies": {
-		"concurrently": "9.2.1"
+		"concurrently": "9.2.1",
+		"junit-report-merger": "9.0.4"
 	}
 }
