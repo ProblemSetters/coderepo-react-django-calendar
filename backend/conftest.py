@@ -1,5 +1,4 @@
 import os
-import re
 from types import SimpleNamespace
 from urllib.parse import urlsplit, urlunsplit
 
@@ -12,8 +11,8 @@ PING_TIMEOUT_MS = 3000
 # The app hashes with its own cost. Tests only need a valid hash, so they use the cheapest one.
 TEST_HASH_ROUNDS = 4
 
-# Filled in by pytest_configure: the app's database name, the name of this run's database and its URI.
-run = SimpleNamespace(app_database="", database="", uri="", is_ready=False)
+# Filled in by pytest_configure: the test database's name and URI.
+run = SimpleNamespace(database="", uri="")
 
 
 def with_database(uri, database):
@@ -22,11 +21,11 @@ def with_database(uri, database):
 
 
 def pytest_configure(config):
-    # Runs before Django loads, so settings.py connects to this run's own database and never to the app's.
+    # Runs before Django loads, so settings.py connects to <app database>_test and never to the app's own.
     load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
     app_uri = os.environ.get("MONGODB_URI", DEFAULT_URI)
-    run.app_database = urlsplit(app_uri).path.lstrip("/") or "calendar_db"
-    run.database = f"{run.app_database}_test_{os.getpid()}"
+    app_database = urlsplit(app_uri).path.lstrip("/") or "calendar_db"
+    run.database = f"{app_database}_test"
     run.uri = with_database(app_uri, run.database)
     os.environ["MONGODB_URI"] = run.uri
     os.environ.setdefault("JWT_SECRET", "calendar-test-secret")
@@ -35,30 +34,6 @@ def pytest_configure(config):
     import django
 
     django.setup()
-
-
-def is_running(pid):
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-    return True
-
-
-def drop_test_database(client, name):
-    # Only a database made for a test run is ever dropped.
-    if "_test_" in name:
-        client.drop_database(name)
-
-
-def drop_finished_runs_databases(client):
-    finished = re.compile(rf"^{re.escape(run.app_database)}_test_(\d+)$")
-    for name in client.list_database_names():
-        match = finished.match(name)
-        if match and not is_running(int(match.group(1))):
-            drop_test_database(client, name)
 
 
 def declared_models():
@@ -82,20 +57,11 @@ def pytest_sessionstart(session):
             f"The tests need MongoDB at {run.uri}, and it did not answer. Click Install or Run to start it, then run the tests again.",
             1,
         )
-    client = mongoengine.get_connection()
-    drop_finished_runs_databases(client)
+    # Every run starts from an empty test database.
+    mongoengine.get_connection().drop_database(run.database)
     # Builds every declared index before a test relies on it, such as the unique calendar name.
     for model in declared_models():
         model.ensure_indexes()
-    run.is_ready = True
-
-
-def pytest_sessionfinish(session, exitstatus):
-    if not run.is_ready:
-        return
-    import mongoengine
-
-    drop_test_database(mongoengine.get_connection(), run.database)
 
 
 @pytest.fixture(autouse=True)

@@ -97,4 +97,4 @@ The frontend runs on port `3000`, the API runs on port `8000`, and health is ava
 
 HackerRank installs the application with `bun install && bash setup.sh --seed`, runs it with `bun start`, and runs the tests with `bun run test`.
 
-The backend tests need MongoDB, which Install and Run start. They never touch the app's own data: each run uses its own `calendar_db_test_<id>` database and drops it when it ends. Only `bun run test` writes `output/junit.xml`; `test:backend` and `test:frontend` print their results only.
+The backend tests need MongoDB, which Install and Run start. They never touch the app's own data: they use a separate `calendar_db_test` database, emptied before every test. `bun run test` merges the backend and frontend results into `output/junit.xml`.
